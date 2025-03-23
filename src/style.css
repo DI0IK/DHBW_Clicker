@@ -1,5 +1,41 @@
+:root {
+  --primary: #2a5;
+}
+
 .prof {
-  border: 1px solid black;
+  border: 2px solid var(--primary);
   border-radius: 1rem;
   padding: 1rem;
+}
+
+.prof p:first-child {
+  margin-block-start: 0.25rem;
+}
+
+#professoren {
+  margin-block-start: 1rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+button {
+  background-color: #444;
+  width: 100%;
+  color: #eee;
+  padding: .5rem 1rem;
+  font-size: 1.15rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: 0;
+}
+
+button:hover {
+  background-color: #555;
+}
+
+body {
+  background-color: #333;
+  color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
