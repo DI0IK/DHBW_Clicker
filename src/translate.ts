@@ -30,13 +30,15 @@ const translationsB6 = {
 
 const translations = translationsB6;
 
+export type Translations = {[key in keyof typeof translations]: string};
+
 /**
  * 
  * @param {string} key Der Übersetzungs-Schlüssel, muss dem Namen eines keys aus translations entsprechen
  * @param {Object} options Wenn im zu übersetztenden String ein Wert in geschweiften Klammern steht, kann dieser mit Optionen zum eigentlichen Wert konvertiert werden
  * @returns 
  */
-export const t = (key, options) => {
+export const t = (key: keyof typeof translations, options?: {[key: string]: string | number}): string => {
   let translated = translations[key];
 
   // Ein Fallback, wenn die Überseztung nicht existiert
@@ -55,7 +57,7 @@ export const t = (key, options) => {
    */
   if (options) {
     Object.entries(options).forEach(([key, value]) => {
-      translated = translated.replaceAll(`{${key}}`, value);
+      translated = translated.replaceAll(`{${key}}`, value.toString());
     });
   }
 

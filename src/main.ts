@@ -1,6 +1,6 @@
-import { dom, $ } from "./dom";
-import { generators } from "./gameData";
-import { t } from "./translate";
+import { dom, $ } from "./dom.js";
+import { GeneratorNames, generators } from "./gameData.js";
+import { t } from "./translate.js";
 
 /**
  * Initialisiert das Grundgerüst unseres Spiels:
@@ -13,6 +13,10 @@ import { t } from "./translate";
  */
 function initializeUi () {
   const root = document.getElementById('info');
+  if(!root) {
+    console.error("Root element not found!");
+    return;
+  }
 
   const label = dom('p', { id: 'items-counter' }, t('label.items', { count: 0 }));
 
@@ -35,14 +39,17 @@ initializeUi();
  * @param {number} priceMultiplicator Multiplikator der auf den "aktuellen" Preis aufgeschlagen wird. Sorgt für einen Zinses-Zins-Effekt
  * @param {number} resourcesPerSecond Beschreibt wie viele "Einheiten" pro Sekunde gesammelt werden
  */
-const generateProf = (key, basePrice, priceMultiplicator, resourcesPerSecond) => {
+const generateProf = (key: GeneratorNames, basePrice: number, priceMultiplicator: number, resourcesPerSecond: number): Prof => {
   // Stellt die aktuelle Menge dar
   let amount = 0;
   // Stellt den aktuellen Preis dar
   let currentPrice = basePrice;
 
   // Verknüpfung zu relevanten UI-Elementen
-  const uiElements = {
+  const uiElements: {
+    currentPriceLabel: HTMLParagraphElement | null,
+    currentAmountLabel: HTMLParagraphElement | null
+  } = {
     currentPriceLabel: null,
     currentAmountLabel: null,
   };
@@ -112,8 +119,8 @@ const generateProf = (key, basePrice, priceMultiplicator, resourcesPerSecond) =>
    * Aktualisiert die notwendigen UI-Elemente des Professors
    */
   const updateUi = () => {
-    uiElements.currentPriceLabel.innerHTML = t('label.price', { count: currentPrice });
-    uiElements.currentAmountLabel.innerText = t('label.amount', { count: amount });
+    uiElements.currentPriceLabel!.innerHTML = t('label.price', { count: currentPrice });
+    uiElements.currentAmountLabel!.innerText = t('label.amount', { count: amount });
   }
 
   /**
@@ -130,7 +137,7 @@ const generateProf = (key, basePrice, priceMultiplicator, resourcesPerSecond) =>
    * Sie setzt die gespeicherte Menge des jeweiligen Professors
    * @param {number} savedAmount Die gespeicherte Menge aus dem localStorage
    */
-  const load = (savedAmount) => {
+  const load = (savedAmount: number) => {
     // Wir erstellen uns ein Array der Länge "savedAmount" und rufen damit genauso-oft
     // die Kauf-Funktion auf, dies erhöht automatisch Menge und Kaufpreis des Professors
     new Array(savedAmount).fill(0).forEach(confirmBuy);
@@ -164,6 +171,13 @@ const generateProf = (key, basePrice, priceMultiplicator, resourcesPerSecond) =>
   }
 };
 
+type Prof = {
+  getEctsSinceLastUpdate: () => number;
+  confirmBuy: () => void;
+  save: () => {key: GeneratorNames; amount: number};
+  load: (savedAmount: number) => void;
+};
+
 /**
  * Die Kern-Logik unseres Spiels.
  * Sie orchestriert folgende Funktionen:
@@ -192,9 +206,9 @@ const game = (function() {
     ) => {
       return {
         ...previous,
-        [key]: generateProf(key, basePrice, multiplicator, incomePerSecond),
+        [key]: generateProf(key as GeneratorNames, basePrice, multiplicator, incomePerSecond),
       };
-  }, {});
+  }, {}) as {[key in GeneratorNames]: Prof};
 
   const uiElements = {
     label: document.getElementById('items-counter'),
@@ -202,7 +216,7 @@ const game = (function() {
   };
 
   function updateEctsLabel () {
-    uiElements.label.innerText = t('label.items', { count: Math.floor(items)});
+    uiElements.label!.innerText = t('label.items', { count: Math.floor(items)});
   }
   
   function increaseResource () {
@@ -211,7 +225,7 @@ const game = (function() {
   }
 
   // Diese Funktion wird beim "check-buy"-CustomEvent aufgerufen
-  function buyProf (event) {
+  function buyProf (event: {detail: {price: number, key: GeneratorNames}}) {
     const { detail } = event;
     // Prüfen ob es genügen resourcen gibt
     if (detail.price <= items) {
@@ -272,8 +286,13 @@ const game = (function() {
     // Daten aus Storage abholen
     const rawData = localStorage.getItem('savedata');
 
+    if(!rawData) return;
+
     // Rohe (string)-Daten in JSON-Objekt umwandeln
-    const parsedData = JSON.parse(rawData);
+    const parsedData = JSON.parse(rawData) as {
+      items: number;
+      professoren: {key: GeneratorNames, amount: number}[];
+    };
 
     items = parsedData.items;
     // Wir laden jeden professor wieder
@@ -286,7 +305,7 @@ const game = (function() {
 
   // Verlinkt die UI-Elemente und startet auf das "check-buy"-Event zu hören
   function hookUi () {
-    uiElements.button.addEventListener('click', increaseResource);
+    uiElements.button!.addEventListener('click', increaseResource);
 
     document.addEventListener('check-buy', buyProf);
   }

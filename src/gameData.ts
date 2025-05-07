@@ -10,4 +10,6 @@
 export const generators = {
   freudenmann: [15, 2, 0.2],
   roethig: [100, 3, 0.1],
-};
+} as const;
+
+export type GeneratorNames = keyof typeof generators;
